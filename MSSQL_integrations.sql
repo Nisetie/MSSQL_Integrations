@@ -322,7 +322,7 @@ GO
 @useAction bit - использовать запрос из колонки action таблицы DataObject вместо генерации запроса из метаданных
 */
 -- [dbo].[usp_runIntegration] @dataObjectId = 2, @useAction = 1;
-ALTER procedure [dbo].[usp_runIntegration]
+CREATE procedure [dbo].[usp_runIntegration]
 	@dataObjectId int,
 	@StartDateTime datetime = null,
 	@EndDateTime datetime = null,
@@ -337,7 +337,7 @@ as begin
 		--if @StartDatetime is null set @StartDatetime = dateadd(DAY, -2, @EndDateTime);		
 
 		DECLARE @me nvarchar(max) = concat(OBJECT_SCHEMA_NAME(@@PROCID),'.',OBJECT_NAME(@@PROCID));
-		declare @logCommand nvarchar(max) = concat(@me,' ',@dataobjectid,',''',format(@StartDatetime,'yyyy-MM-dd HH:mm:ss'),''',''',format(@EndDateTime,'yyyy-MM-dd HH:mm:ss'),''',',@useAction);
+		declare @logCommand nvarchar(max) = concat(@me,' ',@dataobjectid,',', iif(@StartDatetime is null,'NULL','''' + format(@StartDatetime,'yyyy-MM-dd HH:mm:ss') + ''''),',',iif(@EndDateTime is null, 'NULL', '''' + format(@EndDateTime,'yyyy-MM-dd HH:mm:ss') +''''),',',@useAction);
 		declare @logMessage nvarchar(max) = '';
 
 		if not exists (select id from dbo.DataObject where id = @dataObjectId) begin
@@ -351,7 +351,7 @@ as begin
 	
 		set @sql += '
 DECLARE @startDateTime datetime = @StartDatetime_in, @endDateTime datetime = @EndDateTime_in;
-if @EndDateTime_in is null set @EndDateTime = cast(format( getdate(),''yyyy-MM-dd HH:00'') as datetime);
+if @EndDateTime_in is null set @EndDateTime = cast(convert(datetime, format(getdate(),''yyyy-MM-dd HH:00:00''),120) as datetime);
 if @StartDatetime_in is null set @StartDatetime = dateadd(DAY, -2, @EndDateTime);
 ';
 	
