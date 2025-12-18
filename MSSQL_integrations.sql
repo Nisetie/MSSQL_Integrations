@@ -320,6 +320,10 @@ GO
 @StartDateTime datetime - начало периода запроса данных (для фильтра по полям с меткой IsTimestamp из таблицы DataAttributes)
 @EndDateTime datetime - конец периода запроса данных (для фильтра по полям с меткой IsTimestamp из таблицы DataAttributes)
 @useAction bit - использовать запрос из колонки action таблицы DataObject вместо генерации запроса из метаданных
+@verbose - вывод информации о работе процедуры.
+	0 - ничего не выводить
+	1 - вывести сгенерированный скрипт и выполнить его
+	2 - вывести сгенерированный скрипт без его выполнения
 */
 -- [dbo].[usp_runIntegration] @dataObjectId = 2, @useAction = 1;
 CREATE procedure [dbo].[usp_runIntegration]
@@ -327,7 +331,7 @@ CREATE procedure [dbo].[usp_runIntegration]
 	@StartDateTime datetime = null,
 	@EndDateTime datetime = null,
 	@useAction bit = 0,
-	@verbose bit = 0
+	@verbose int = 0
 as begin
 	set nocount on;
 
@@ -418,7 +422,7 @@ insert into dbo.LogDetails(log_id,Details) select @log_id, details from @updated
 ';
 
 		end
-			if (@verbose = 1) begin 
+			if (@verbose > 0) begin 
 				select concat('DECLARE 
 @dataObject_id_in int = ',@dataObjectId,',
 @logCommand_in nvarchar(max) = ''',replace(@logCommand,'''',''''''),''',
@@ -426,6 +430,8 @@ insert into dbo.LogDetails(log_id,Details) select @log_id, details from @updated
 @endDateTime_in datetime = ',iif(@endDateTime is null, 'NULL', '{ts ''' + format(@endDateTime,'yyyy-MM-dd HH:mm:ss') + '''}'),';
 ', @sql);
 			end
+			if (@verbose = 2)
+				return;
 			exec sp_executesql @sql, N'@dataObject_id_in int,@logCommand_in nvarchar(max),@startDateTime_in datetime,@endDateTime_in datetime', @logCommand_in = @logCommand, @dataObject_id_in = @dataObjectId, @StartDateTime_in = @StartDateTime, @EndDateTime_in=@EndDateTime;
 	END TRY
 	BEGIN CATCH
