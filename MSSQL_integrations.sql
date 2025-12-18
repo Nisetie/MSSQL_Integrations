@@ -24,8 +24,8 @@ GO
 CREATE view [dbo].[v_Log] as 
 with [all] as (
 SELECT l.id, l.DataObject_id, l.Command, l.IsError,  ld.details.exist(N'/INSERT') [INSERT], ld.details.exist(N'/DELETE') [DELETE],ld.details.exist(N'/UPDATE') [UPDATE]
-FROM [Integrations].[dbo].[Log] l with (nolock)
-left join [Integrations].[dbo].LogDetails ld with (nolock) on l.id = ld.log_id
+FROM [dbo].[Log] l with (nolock)
+left join [dbo].LogDetails ld with (nolock) on l.id = ld.log_id
 )
 ,inserted as (
 SELECT id, DataObject_id, Command, IsError,  count(id) as [INSERT]
